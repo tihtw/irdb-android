@@ -2,10 +2,12 @@ package com.tih.irdb;
 
 import android.content.Context;
 import android.content.Intent;
+import android.hardware.ConsumerIrManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -16,6 +18,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.tih.tihir.ConsumerIrManagerCompat;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.DataOutputStream;
 import java.io.IOError;
@@ -41,17 +49,20 @@ import java.util.Map;
 
 public class MainActivity extends ActionBarActivity {
 
-    final String irdbUrl = "https://irdb.tih.tw";
+    static final String irdbUrl = "https://irdb.tih.tw";
+    public static String addCodeUrl = "/api/addCode";
     final String registerUrl = "/auth/register";
     final String loginUrl = "/auth/login";
 
     final String tag = "MainActivity";
 
-    CookieManager cookieManager;
+    static CookieManager cookieManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Log.d(tag, "MANUFACTURER:" + Build.MANUFACTURER);
 
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -65,8 +76,9 @@ public class MainActivity extends ActionBarActivity {
             // display error
             Log.d(tag, "Network Fail");
         }
+        final ConsumerIrManagerCompat irManager = ConsumerIrManagerCompat.createInstance(this);
 
-
+        irManager.start();
         Button register = (Button) findViewById(R.id.register);
         register.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,7 +87,6 @@ public class MainActivity extends ActionBarActivity {
                 startActivity(browser);
             }
         });
-
 
         Button login = (Button) findViewById(R.id.login);
         login.setOnClickListener(new View.OnClickListener() {
@@ -105,6 +116,17 @@ public class MainActivity extends ActionBarActivity {
                     protected void onPostExecute(Boolean result){
                         if(result)Toast.makeText(MainActivity.this, "Login Success",Toast.LENGTH_SHORT).show();
                         else Toast.makeText(MainActivity.this,"Login Failure", Toast.LENGTH_SHORT).show();
+
+                        if(result){
+
+                            Log.d(tag, "Start Intent");
+                            Intent intent = new Intent(MainActivity.this, MainScreenActivity.class);
+                            startActivity(intent);
+                            Log.d(tag, "Started Intent");
+                            //intent.putExtra("cookie")
+
+
+                        }
                     }
                 }.execute("");
 
@@ -149,7 +171,7 @@ public class MainActivity extends ActionBarActivity {
         return cookieManager;
     }
 
-    private void renewCookieManager(HttpURLConnection conn){
+    public static void renewCookieManager(HttpURLConnection conn){
         if(cookieManager == null)
             cookieManager = new CookieManager();
         Map<String, List<String>> headerFields = conn.getHeaderFields();
@@ -157,7 +179,7 @@ public class MainActivity extends ActionBarActivity {
         if(cookiesHeader != null){
             for(String cookie: cookiesHeader){
                 cookieManager.getCookieStore().add(null, HttpCookie.parse(cookie).get(0));
-                Log.d(tag, cookie);
+                Log.d("renewCookieManager", cookie);
             }
         }
     }
