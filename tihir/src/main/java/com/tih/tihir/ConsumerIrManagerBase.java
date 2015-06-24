@@ -27,6 +27,10 @@ import android.content.Context;
 import android.hardware.ConsumerIrManager;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 @TargetApi(19)
 public class ConsumerIrManagerBase extends com.tih.tihir.ConsumerIrManagerCompat {
 	private final static String TAG = "ConsumerIrManagerBase";
@@ -50,6 +54,7 @@ public class ConsumerIrManagerBase extends com.tih.tihir.ConsumerIrManagerCompat
 			mCIR.transmit(carrierFrequency, pattern);
 		}
 	}
+
 	@Override
 	public CarrierFrequencyRange[] getCarrierFrequencies() {
 		CarrierFrequencyRange[] result = null;

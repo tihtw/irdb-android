@@ -2,14 +2,13 @@ package com.tih.irdb;
 
 import android.content.Context;
 import android.content.Intent;
-import android.hardware.ConsumerIrManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -19,27 +18,25 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.getirkit.irkit.IRKit;
+import com.getirkit.irkit.IRPeripherals;
+import com.getirkit.irkit.IRSignal;
+import com.getirkit.irkit.IRSignals;
+import com.getirkit.irkit.net.IRAPIError;
+import com.getirkit.irkit.net.IRAPIResult;
 import com.tih.tihir.ConsumerIrManagerCompat;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.tih.tihir.ConsumerIrManagerIRKit;
 
 import java.io.DataOutputStream;
-import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -76,9 +73,10 @@ public class MainActivity extends ActionBarActivity {
             // display error
             Log.d(tag, "Network Fail");
         }
-        final ConsumerIrManagerCompat irManager = ConsumerIrManagerCompat.createInstance(this);
+//        final ConsumerIrManagerCompat irManager = ConsumerIrManagerCompat.createInstance(this);
+//        irManager.start();
 
-        irManager.start();
+
         Button register = (Button) findViewById(R.id.register);
         register.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -134,6 +132,75 @@ public class MainActivity extends ActionBarActivity {
         });
 
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        Button testButton = (Button) findViewById(R.id.testBtn);
+        testButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ConsumerIrManagerCompat irkit = new ConsumerIrManagerIRKit(MainActivity.this);
+                irkit.start();
+
+                IRPeripherals peripherals = IRKit.sharedInstance().peripherals;
+                Log.d(tag, ""+ peripherals);
+
+                if(peripherals.size() == 0){
+                    Log.d(tag, "no device found");
+
+                }
+
+
+                IRSignal signal = new IRSignal();
+
+                int[] data = {1200,400,1200,400,400,1200,1200,400,1200,400,400,1200,400,1200,400,1200,400,1200,400,1200,400,1200,1200,6800};
+                for(int i=0;i<data.length;++i){
+                    data[i] *=2;
+
+                }
+                signal.setDeviceId(peripherals.get(0).getDeviceId());
+                signal.setData(data);
+                signal.setFormat("raw");
+                signal.setFrequency(38);
+
+                // signalを送信
+                IRKit.sharedInstance().sendSignal(signal, new IRAPIResult() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d(tag, "送信成功");
+                        // 送信成功
+                    }
+
+                    @Override
+                    public void onError(IRAPIError error) {
+                        Log.d(tag,"送信エラー");
+                        // 送信エラー
+                    }
+
+                    @Override
+                    public void onTimeout() {
+                        Log.d(tag, "送信エラー");
+                        // 送信エラー（タイムアウト）
+                    }
+                });
+
+
+
+
+
+            }
+        });
+
+
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
 
     @Override

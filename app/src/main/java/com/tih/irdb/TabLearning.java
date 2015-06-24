@@ -139,53 +139,9 @@ public class TabLearning extends Fragment{
                 MainScreenActivity.irManager.setOnLearnListener(new ConsumerIrManagerCompat.OnLearnListener() {
 
                     @Override
-                    public void onLearn(Message msg) {
-                        if (msg.arg1 != CIRControl.ERR_NONE) {
-                            if(MainScreenActivity.irLearnRetry < 3) {
-                                ++MainScreenActivity.irLearnRetry;
-                                if(msg.arg1 == CIRControl.ERR_LEARNING_TIMEOUT){
-                                    Toast.makeText(getActivity(), "逾時未收到信號，停止學習。",
-                                            Toast.LENGTH_SHORT).show();
-                                    return;
-                                }else if(msg.arg1 == CIRControl.ERR_OUT_OF_FREQ ||
-                                        msg.arg1 == CIRControl.ERR_PULSE_ERROR){
-                                    Toast.makeText(getActivity(), "發生錯誤，重新學習，錯誤代碼：" +
-                                            msg.arg1+"，可能是遭受干擾。", Toast.LENGTH_SHORT).show();
-                                }else {
-                                    Toast.makeText(getActivity(), "發生錯誤，重新學習，錯誤代碼：" +
-                                            msg.arg1, Toast.LENGTH_SHORT).show();
-                                }
-                                MainScreenActivity.irManager.learnIRCmd(10);
-                                return;
-                            }else{
-                                Toast.makeText(getActivity(), "超過3次，放棄。", Toast.LENGTH_LONG).show();
-                                return;
-                            }
-                        }
+                    public void onLearn(String code) {
 
-                        UUID rid = (UUID) msg.getData().getSerializable(CIRControl.KEY_RESULT_ID);
-                        Log.d(tag, "Receive IR Returned UUID: " + rid);
-
-
-                        HtcIrData mLearnKey = (HtcIrData) msg.getData().getSerializable(CIRControl.KEY_CMD_RESULT);
-
-                        //HTC IR DATA to IRDB IR DATA
-                        int[] frame = HtcIrFrameToIrdbIrFrame(mLearnKey.getFrame());
-
-
-
-
-                        JSONObject jsonObject = new JSONObject();
-                        try {
-                            jsonObject.put("format", "raw");
-                            jsonObject.put("freq", mLearnKey.getFrequency() / 1000.0);
-                            jsonObject.put("data", new JSONArray(frame));
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-                        Log.d(tag, "Code String: " + jsonObject.toString());
+                        Log.d(tag, "Code String: " +code);
 
                         Canvas canvas = new Canvas(MainScreenActivity.dotLayer);
                         Paint paint = new Paint();
@@ -194,11 +150,29 @@ public class TabLearning extends Fragment{
 
                         canvas.drawCircle(pointXp, pointYp, 5 / scaleRate, paint);
                         MainScreenActivity.codeRecordList.add(
-                                new InfraredCodeRecord(pointXp / bw, pointYp / bh, jsonObject.toString()));
+                                new InfraredCodeRecord(pointXp / bw, pointYp / bh, code));
 
                         controllerPhotoDots.setImageBitmap(MainScreenActivity.dotLayer);
 
+                    }
 
+
+                    @Override
+                    public void onError(String errorCode) {
+                        if(MainScreenActivity.irLearnRetry < 3) {
+                            ++MainScreenActivity.irLearnRetry;
+                            if(errorCode.equals(""+CIRControl.ERR_LEARNING_TIMEOUT)){
+                                Toast.makeText(getActivity(), "逾時未收到信號，停止學習。",
+                                        Toast.LENGTH_SHORT).show();
+                                return;
+                            }else {
+                                Toast.makeText(getActivity(), "發生錯誤，重新學習，錯誤代碼：" +
+                                        errorCode + "，可能是遭受干擾。", Toast.LENGTH_SHORT).show();
+                            }
+                            MainScreenActivity.irManager.learnIRCmd(10);
+                        }else{
+                            Toast.makeText(getActivity(), "超過3次，放棄。", Toast.LENGTH_LONG).show();
+                        }
                     }
                 });
 
@@ -223,12 +197,5 @@ public class TabLearning extends Fragment{
         startActivityForResult(intent_camera, 0);
     }
 
-    private int[] HtcIrFrameToIrdbIrFrame(int[] input){
-        int[] ans = Arrays.copyOf(input, input.length);
-        for(int i=0;i<ans.length;++i){
-            ans[i] *= 25;
-        }
-        return ans;
-    }
 
 }

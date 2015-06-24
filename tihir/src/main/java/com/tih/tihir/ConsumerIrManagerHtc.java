@@ -24,14 +24,22 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.htc.circontrol.CIRControl;
 import com.htc.htcircontrol.HtcIrData;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
@@ -101,8 +109,34 @@ public class ConsumerIrManagerHtc extends ConsumerIrManagerCompat {
 
             if(msg.what == CIRControl.MSG_RET_LEARN_IR && mOnLearnListener != null){
                 OnLearnListener listener = mOnLearnListener.get();
-                if(listener != null)
-                    listener.onLearn(msg);
+                if(listener != null) {
+                    if (msg.arg1 != CIRControl.ERR_NONE) {
+                        listener.onError(""+msg.arg1);
+                        return;
+                    }
+
+                    UUID rid = (UUID) msg.getData().getSerializable(CIRControl.KEY_RESULT_ID);
+                    Log.d(TAG, "Receive IR Returned UUID: " + rid);
+
+
+                    HtcIrData mLearnKey = (HtcIrData) msg.getData().getSerializable(CIRControl.KEY_CMD_RESULT);
+
+                    //HTC IR DATA to IRDB IR DATA
+                    int[] frame = HtcIrFrameToIrdbIrFrame(mLearnKey.getFrame());
+
+                    JSONObject jsonObject = new JSONObject();
+                    try {
+                        jsonObject.put("format", "raw");
+                        jsonObject.put("freq", mLearnKey.getFrequency() / 1000.0);
+                        jsonObject.put("data", new JSONArray(frame));
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    listener.onLearn(jsonObject.toString());
+
+				}
             }
         }
 
@@ -242,8 +276,14 @@ public class ConsumerIrManagerHtc extends ConsumerIrManagerCompat {
 	@Override
 	public void transmit(int carrierFrequency, int[] pattern) {
         Log.d(TAG,"Transmit");
+
+        for (int i = 0; i < pattern.length; ++i) {
+            pattern[i] /= 25;
+        }
+
 		mHandler.post(new SendRunnable(carrierFrequency, pattern));
 	}
+
 
 	@Override
 	public CarrierFrequencyRange[] getCarrierFrequencies() {
@@ -314,5 +354,14 @@ public class ConsumerIrManagerHtc extends ConsumerIrManagerCompat {
 		}
 		return null;
 	}
+
+
+    private static int[] HtcIrFrameToIrdbIrFrame(int[] input){
+        int[] ans = Arrays.copyOf(input, input.length);
+        for(int i=0;i<ans.length;++i){
+            ans[i] *= 25;
+        }
+        return ans;
+    }
 
 }

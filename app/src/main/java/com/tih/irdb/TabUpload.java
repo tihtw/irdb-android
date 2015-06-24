@@ -143,36 +143,10 @@ public class TabUpload extends Fragment{
             }
 
             private void transmitCode(InfraredCodeRecord record) {
-                if (Build.MANUFACTURER.equals("HTC")) {
-                    transmitCodeWithHtcIRAPI(record);
-                } else {
-                    transmitCodeWithAndroidIRAPI(record);
-                }
 
 
-            }
 
-            private void transmitCodeWithHtcIRAPI(InfraredCodeRecord record) {
-                String code = record.getCode();
-                try {
-                    JSONObject jsonObject = new JSONObject(code);
-                    JSONArray jsonArray = jsonObject.getJSONArray("data");
-                    int[] data = new int[jsonArray.length()];
-
-                    for (int i = 0; i < data.length; ++i) {
-                        data[i] = jsonArray.optInt(i) / 25;
-                    }
-                    Log.d(tag, "Transmit IR, freq: " + jsonObject.getDouble("freq") * 1000 + "data:aaa " + jsonArray.toString());
-                    MainScreenActivity.irManager.transmit((int) (jsonObject.getDouble("freq") * 1000), data);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-            }
-
-            private void transmitCodeWithAndroidIRAPI(InfraredCodeRecord record) {
-
-                ConsumerIrManager irManager = (ConsumerIrManager) getActivity().getSystemService(Context.CONSUMER_IR_SERVICE);
+               // ConsumerIrManager irManager = (ConsumerIrManager) getActivity().getSystemService(Context.CONSUMER_IR_SERVICE);
                 String code = record.getCode();
                 try {
                     JSONObject jsonObject = new JSONObject(code);
@@ -183,11 +157,13 @@ public class TabUpload extends Fragment{
                         data[i] = jsonArray.optInt(i);
                     }
                     Log.d(tag, "Transmit IR, freq: " + jsonObject.getDouble("freq") * 1000 + "data:aaa " + jsonArray.toString());
-                    irManager.transmit((int) (jsonObject.getDouble("freq") * 1000), data);
+                    MainScreenActivity.irManager.transmit((int) (jsonObject.getDouble("freq") * 1000), data);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+
             }
+
 
 
         });

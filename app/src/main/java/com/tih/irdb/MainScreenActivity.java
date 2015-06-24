@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.tih.tihir.ConsumerIrManagerCompat;
+import com.tih.tihir.ConsumerIrManagerIRKit;
 
 import java.io.File;
 import java.net.CookieManager;
@@ -61,7 +62,8 @@ public class MainScreenActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_screen);
-        irManager = ConsumerIrManagerCompat.createInstance(this);
+        //irManager = ConsumerIrManagerCompat.createInstance(this);
+        irManager = new ConsumerIrManagerIRKit(this);
         irManager.start();
 
 
@@ -160,6 +162,18 @@ public class MainScreenActivity extends ActionBarActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
 
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        irManager.start();
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        irManager.stop();
     }
 
 }

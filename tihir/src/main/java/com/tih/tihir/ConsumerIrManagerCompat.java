@@ -135,7 +135,8 @@ public abstract class ConsumerIrManagerCompat {
 	// remember to mCIRControl.start() and mCIRControl.stop()
 
     public interface OnLearnListener {
-        void onLearn(Message msg);
+		void onLearn(String code);
+		void onError(String errorCode);
     }
 
 }
