@@ -21,6 +21,7 @@
  */
 package com.tih.tihir;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,8 +52,43 @@ public abstract class ConsumerIrManagerCompat {
     public int []frame;
 
 	protected OnLearnListener mOnLearnListener;
-	
-	/**
+
+
+	public static String[] getReceiverCapacityList(Context context){
+        List<String> tmp = new ArrayList<>();
+        if ((Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP ||
+                Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT)
+                && hasPackage(CONSUMER_IRMODULE_HTC, context)) {
+            tmp.add("HTC API");
+        }
+
+
+        tmp.add("IRKit");
+        //TODO Add perpherial name of IRKit
+        return tmp.toArray(new String[tmp.size()]);
+    }
+
+
+    public static String[] getTransferCapacityList(Context context){
+        List<String> tmp = new ArrayList<>();
+        if ((Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP ||
+                Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT)
+                && hasPackage(CONSUMER_IRMODULE_HTC, context)) {
+            tmp.add("HTC API");
+        }
+
+        tmp.add("IRKit");
+        //TODO Add perpherial name of IRKit
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
+                && context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONSUMER_IR)){
+            tmp.add("Android API");
+        }
+        return tmp.toArray(new String[tmp.size()]);
+    }
+
+
+    /**
      * Factory method for creating corresponding CIR helper class
      */
     public static ConsumerIrManagerCompat createInstance(Context context) {

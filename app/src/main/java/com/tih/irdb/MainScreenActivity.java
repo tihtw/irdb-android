@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.tih.tihir.ConsumerIrManagerCompat;
+import com.tih.tihir.ConsumerIrManagerHtc;
 import com.tih.tihir.ConsumerIrManagerIRKit;
 
 import java.io.File;
@@ -40,7 +41,8 @@ public class MainScreenActivity extends ActionBarActivity {
 
     static List<InfraredCodeRecord> codeRecordList;
 
-    static ConsumerIrManagerCompat irManager;
+    static ConsumerIrManagerCompat irReceiverManager;
+    static ConsumerIrManagerCompat irTransferManager;
     static int irLearnRetry;
 
     Toolbar toolbar;
@@ -63,9 +65,10 @@ public class MainScreenActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_screen);
         //irManager = ConsumerIrManagerCompat.createInstance(this);
-        irManager = new ConsumerIrManagerIRKit(this);
-        irManager.start();
-
+        irReceiverManager = new ConsumerIrManagerHtc(this);
+        irTransferManager = new ConsumerIrManagerHtc(this);
+        irReceiverManager.start();
+        irTransferManager.start();
 
         // Creating The Toolbar and setting it as the Toolbar for the activity
         toolbar = (Toolbar) findViewById(R.id.tool_bar);
@@ -168,12 +171,14 @@ public class MainScreenActivity extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        irManager.start();
+        irTransferManager.start();
+        irReceiverManager.start();
     }
     @Override
     protected void onPause() {
         super.onPause();
-        irManager.stop();
+        irTransferManager.stop();
+        irReceiverManager.stop();
     }
 
 }

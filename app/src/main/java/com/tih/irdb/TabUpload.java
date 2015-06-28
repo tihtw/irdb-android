@@ -157,7 +157,7 @@ public class TabUpload extends Fragment{
                         data[i] = jsonArray.optInt(i);
                     }
                     Log.d(tag, "Transmit IR, freq: " + jsonObject.getDouble("freq") * 1000 + "data:aaa " + jsonArray.toString());
-                    MainScreenActivity.irManager.transmit((int) (jsonObject.getDouble("freq") * 1000), data);
+                    MainScreenActivity.irTransferManager.transmit((int) (jsonObject.getDouble("freq") * 1000), data);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

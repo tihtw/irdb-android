@@ -130,13 +130,13 @@ public class TabLearning extends Fragment{
 
 
 
-                MainScreenActivity.irManager.learnIRCmd(10);
+                MainScreenActivity.irReceiverManager.learnIRCmd(10);
 
                 Toast.makeText(getActivity(), "學習中", Toast.LENGTH_LONG).show();
 
                 MainScreenActivity.irLearnRetry = 0;
 
-                MainScreenActivity.irManager.setOnLearnListener(new ConsumerIrManagerCompat.OnLearnListener() {
+                MainScreenActivity.irReceiverManager.setOnLearnListener(new ConsumerIrManagerCompat.OnLearnListener() {
 
                     @Override
                     public void onLearn(String code) {
@@ -169,7 +169,7 @@ public class TabLearning extends Fragment{
                                 Toast.makeText(getActivity(), "發生錯誤，重新學習，錯誤代碼：" +
                                         errorCode + "，可能是遭受干擾。", Toast.LENGTH_SHORT).show();
                             }
-                            MainScreenActivity.irManager.learnIRCmd(10);
+                            MainScreenActivity.irReceiverManager.learnIRCmd(10);
                         }else{
                             Toast.makeText(getActivity(), "超過3次，放棄。", Toast.LENGTH_LONG).show();
                         }

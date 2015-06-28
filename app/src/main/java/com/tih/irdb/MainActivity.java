@@ -52,6 +52,8 @@ public class MainActivity extends ActionBarActivity {
     final String loginUrl = "/auth/login";
 
     final String tag = "MainActivity";
+    static String[] receiverCapacityList;
+    static String[] transmitterCapacityList;
 
     static CookieManager cookieManager;
     @Override
@@ -60,6 +62,14 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         Log.d(tag, "MANUFACTURER:" + Build.MANUFACTURER);
+
+
+        receiverCapacityList =ConsumerIrManagerCompat.getReceiverCapacityList(this);
+        transmitterCapacityList =ConsumerIrManagerCompat.getTransferCapacityList(this);
+
+        for(int i=0;i<transmitterCapacityList.length;++i){
+            Log.d(tag, "Capa: " + transmitterCapacityList[i]);
+        }
 
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
