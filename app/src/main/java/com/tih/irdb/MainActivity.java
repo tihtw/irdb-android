@@ -50,6 +50,7 @@ public class MainActivity extends ActionBarActivity {
     public static String addCodeUrl = "/api/addCode";
     final String registerUrl = "/auth/register";
     final String loginUrl = "/auth/login";
+    static final String getBrandUrl = "/device";
 
     final String tag = "MainActivity";
     static String[] receiverCapacityList;

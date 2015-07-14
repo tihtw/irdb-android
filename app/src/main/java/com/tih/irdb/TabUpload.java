@@ -24,21 +24,30 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpCookie;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by pichu on 西元15/6/17.
@@ -48,11 +57,104 @@ public class TabUpload extends Fragment{
     ListView codeRecordlistView ;
 
     String tag = "TabUpload";
+    int submitDeviceId = 2;
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d(tag, "onCreateView");
         View v =inflater.inflate(R.layout.tab_upload,container,false);
+
+        final Spinner spinnerBrand = (Spinner) v.findViewById(R.id.spinner_brand);
+        final Spinner spinnerModel = (Spinner) v.findViewById(R.id.spinner_model);
+
+        new AsyncTask<Void,Void,ArrayList<Map<String, String> >>(){
+
+            @Override
+            protected ArrayList<Map<String, String> > doInBackground(Void... params) {
+                try {
+                    return fetchBrands();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(final ArrayList<Map<String, String> > result) {
+
+                String[] tmp = new String[result.size() + 1];
+                for(int i=0;i<result.size();++i){
+                    tmp[i] = result.get(i).get("display");
+                }
+                tmp[result.size()] = "新增設備";
+
+                spinnerBrand.setAdapter(new ArrayAdapter<String>(getActivity(),
+                        R.layout.support_simple_spinner_dropdown_item, tmp));
+
+                spinnerBrand.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parent, View view, final int position, long id) {
+
+                        if(position == result.size()){
+                            // 新增設備
+
+
+
+                            return;
+
+
+                        }
+                        final Map<String, String> thisBrand = result.get(position);
+
+                        new AsyncTask<Void, Void, ArrayList<Map<String,String> >>(){
+
+                            @Override
+                            protected ArrayList<Map<String, String>> doInBackground(Void... params) {
+                                try {
+                                    return fetchModel(thisBrand.get("name"));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                return null;
+                            }
+
+                            @Override
+                            protected void onPostExecute(final ArrayList<Map<String, String> > result) {
+                                String[] tmp = new String[result.size()];
+                                for(int i=0;i<result.size();++i){
+                                    tmp[i] = result.get(i).get("display");
+                                }
+
+                                spinnerModel.setAdapter(new ArrayAdapter<String>(getActivity(),
+                                        R.layout.support_simple_spinner_dropdown_item, tmp));
+                                spinnerModel.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                                    @Override
+                                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                                        submitDeviceId = Integer.parseInt(result.get(position).get("id"));
+                                    }
+
+                                    @Override
+                                    public void onNothingSelected(AdapterView<?> parent) {
+
+                                    }
+                                });
+
+                            }
+
+                            }.execute();
+
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+
+                    }
+                });
+
+            }
+
+
+        }.execute();
 
         codeRecordlistView = (ListView)v.findViewById(R.id.codeRecordlistView);
 //        final String[] list = {"鉛筆","原子筆","鋼筆","毛筆","彩色筆"};
@@ -181,6 +283,7 @@ public class TabUpload extends Fragment{
                     protected Void doInBackground(Void... params) {
                         for(int i=0;i<MainScreenActivity.codeRecordList.size();++i){
                             try {
+                                MainScreenActivity.codeRecordList.get(i).setDeviceId(submitDeviceId);
                                 submit(i);
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -246,4 +349,153 @@ public class TabUpload extends Fragment{
 
     }
 
+
+    private ArrayList<Map<String,String>> fetchBrands() throws IOException {
+
+        URL url = new URL(MainActivity.irdbUrl + MainActivity.getBrandUrl);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+//        conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
+        conn.setRequestProperty("Accept", "application/json");
+
+        conn.setInstanceFollowRedirects(false);
+        List<HttpCookie> cookies = MainActivity.cookieManager.getCookieStore().getCookies();
+        if (MainActivity.cookieManager.getCookieStore().getCookies().size() > 0) {
+            Log.d(tag, "Send Cookie:" + TextUtils.join("; ", cookies));
+            conn.setRequestProperty("Cookie",
+                    TextUtils.join("; ", cookies));
+        }
+        for (HttpCookie cookie : cookies) {
+            Log.d(tag, "name: " + cookie.getName() + " value: " + cookie.getValue());
+            if (cookie.getName().equals("XSRF-TOKEN")) {
+                conn.setRequestProperty("X-XSRF-TOKEN", URLDecoder.decode(cookie.getValue(), "utf-8"));
+            }
+        }
+        //conn.setRequestProperty("X-XSRF-TOKEN",);
+
+        conn.setDoInput(true);
+        conn.setDoOutput(false);
+
+        conn.connect();
+
+        MainActivity.renewCookieManager(conn);
+        BufferedReader bufferedReader =
+                new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        StringBuilder stringBuilder = new StringBuilder();
+
+        String line = null;
+        while ((line = bufferedReader.readLine()) != null)
+        {
+        stringBuilder.append(line + "\n");
+        }
+        line = stringBuilder.toString();
+
+        Log.d(tag, "Result: " + line);
+
+        ArrayList<Map<String, String> > array = new ArrayList<>();
+
+        try {
+            JSONObject jsonObject = new JSONObject(line);
+            if(!jsonObject.getBoolean("success")){
+                Log.e(tag, "Get Brands Fail");
+                return null;
+            }
+
+            JSONArray list = jsonObject.getJSONObject("data").getJSONArray("brandList");
+            for(int i=0;i<list.length();++i){
+                String name = list.getJSONObject(i).getString("name");
+                String display = list.getJSONObject(i).getString("display");
+
+                Map<String, String> tmp = new HashMap<>();
+                tmp.put("name", name);
+                tmp.put("display", display);
+                array.add(tmp);
+
+                Log.d(tag, "name: " + name + ", display: " + display);
+
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        //array.add(new)
+        return array;
+
+    }
+
+
+    private ArrayList<Map<String,String>> fetchModel(String brand) throws IOException {
+        Log.d(tag,"request Model: " + brand);
+
+        URL url = new URL(MainActivity.irdbUrl + MainActivity.getBrandUrl + '/' + brand);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+//        conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
+        conn.setRequestProperty("Accept", "application/json");
+
+        conn.setInstanceFollowRedirects(false);
+        List<HttpCookie> cookies = MainActivity.cookieManager.getCookieStore().getCookies();
+        if (MainActivity.cookieManager.getCookieStore().getCookies().size() > 0) {
+            Log.d(tag, "Send Cookie:" + TextUtils.join("; ", cookies));
+            conn.setRequestProperty("Cookie",
+                    TextUtils.join("; ", cookies));
+        }
+        for (HttpCookie cookie : cookies) {
+            Log.d(tag, "name: " + cookie.getName() + " value: " + cookie.getValue());
+            if (cookie.getName().equals("XSRF-TOKEN")) {
+                conn.setRequestProperty("X-XSRF-TOKEN", URLDecoder.decode(cookie.getValue(), "utf-8"));
+            }
+        }
+        //conn.setRequestProperty("X-XSRF-TOKEN",);
+
+        conn.setDoInput(true);
+        conn.setDoOutput(false);
+
+        conn.connect();
+
+        MainActivity.renewCookieManager(conn);
+        BufferedReader bufferedReader =
+                new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        StringBuilder stringBuilder = new StringBuilder();
+
+        String line = null;
+        while ((line = bufferedReader.readLine()) != null)
+        {
+            stringBuilder.append(line + "\n");
+        }
+        line = stringBuilder.toString();
+
+        Log.d(tag, "Result: " + line);
+
+        ArrayList<Map<String, String> > array = new ArrayList<>();
+
+        try {
+            JSONObject jsonObject = new JSONObject(line);
+            if(!jsonObject.getBoolean("success")){
+                Log.e(tag, "Get Brands Fail");
+                return null;
+            }
+
+            JSONArray list = jsonObject.getJSONObject("data").getJSONArray("devices");
+            for(int i=0;i<list.length();++i){
+                String model = list.getJSONObject(i).getString("model");
+                String display = list.getJSONObject(i).getString("display");
+                String id = list.getJSONObject(i).getString("id");
+
+                Map<String, String> tmp = new HashMap<>();
+                tmp.put("model", model);
+                tmp.put("display", display);
+                tmp.put("id", id);
+                array.add(tmp);
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        //array.add(new)
+        return array;
+
+    }
 }

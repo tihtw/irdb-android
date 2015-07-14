@@ -28,8 +28,9 @@ public class TabSetting extends Fragment{
 
         Spinner spinnerIRTransmitter = (Spinner)v.findViewById(R.id.spinner_ir_transmitter);
         Spinner spinnerIRReceiver = (Spinner)v.findViewById(R.id.spinner_ir_receiver);
-        final String[] transmitterList = {"HTC API", "IRKit"};
-        final String[] receiverList = {"HTC API", "IRKit"};
+
+//        final String[] transmitterList = {"HTC API", "IRKit"};
+//        final String[] receiverList = {"HTC API", "IRKit"};
 
         spinnerIRReceiver.setAdapter(new ArrayAdapter<String>(getActivity(),
                 R.layout.support_simple_spinner_dropdown_item, MainActivity.receiverCapacityList));
@@ -39,15 +40,15 @@ public class TabSetting extends Fragment{
         spinnerIRReceiver.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(tag, "Select: " + receiverList[position]);
+                Log.d(tag, "Select: " + MainActivity.receiverCapacityList[position]);
                 MainScreenActivity.irReceiverManager.stop();
                 MainScreenActivity.irTransferManager.stop();
-                if (receiverList[position].equals("HTC API")) {
+                if (MainActivity.receiverCapacityList[position].equals("HTC API")) {
                     MainScreenActivity.irReceiverManager = new ConsumerIrManagerHtc(getActivity());
-                } else if (receiverList[position].startsWith("IRKit")) {
+                } else if (MainActivity.receiverCapacityList[position].startsWith("IRKit")) {
                     MainScreenActivity.irReceiverManager = new ConsumerIrManagerIRKit(getActivity());
                 } else {
-                    Log.e(tag, "Unknown Receiver Option: " + receiverList[position]);
+                    Log.e(tag, "Unknown Receiver Option: " + MainActivity.receiverCapacityList[position]);
                 }
                 MainScreenActivity.irReceiverManager.start();
                 MainScreenActivity.irTransferManager.start();
@@ -63,17 +64,17 @@ public class TabSetting extends Fragment{
         spinnerIRTransmitter.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(tag, "Select: " + transmitterList[position]);
+                Log.d(tag, "Select: " + MainActivity.transmitterCapacityList[position]);
                 MainScreenActivity.irReceiverManager.stop();
                 MainScreenActivity.irTransferManager.stop();
-                if (transmitterList[position].equals("HTC API")) {
+                if (MainActivity.transmitterCapacityList[position].equals("HTC API")) {
                     MainScreenActivity.irTransferManager = new ConsumerIrManagerHtc(getActivity());
-                } else if (transmitterList[position].startsWith("IRKit")) {
+                } else if (MainActivity.transmitterCapacityList[position].startsWith("IRKit")) {
                     MainScreenActivity.irTransferManager = new ConsumerIrManagerIRKit(getActivity());
-                }else if(transmitterList[position].equals("Android API")){
+                }else if(MainActivity.transmitterCapacityList[position].equals("Android API")){
                     MainScreenActivity.irTransferManager = new ConsumerIrManagerBase(getActivity());
                 }else {
-                    Log.e(tag, "Unknown Receiver Option: " + transmitterList[position]);
+                    Log.e(tag, "Unknown Receiver Option: " + MainActivity.transmitterCapacityList[position]);
                 }
                 MainScreenActivity.irReceiverManager.start();
                 MainScreenActivity.irTransferManager.start();

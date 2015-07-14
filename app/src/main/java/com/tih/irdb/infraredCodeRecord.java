@@ -12,9 +12,10 @@ public class InfraredCodeRecord {
     float x;
     float y;
     int color;
+
+
+    int device_id;
     String code;
-
-
     String functionCode;
 
     public float getX() {
@@ -52,13 +53,22 @@ public class InfraredCodeRecord {
         return functionCode;
     }
 
+
+    public int getDeviceId() {
+        return device_id;
+    }
+
+    public void setDeviceId(int device_id) {
+        this.device_id = device_id;
+    }
+
     public String toString(){
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("x", x);
             jsonObject.put("y", y);
             jsonObject.put("color", color);
-            jsonObject.put("device_id", 2);
+            jsonObject.put("device_id", device_id);
             jsonObject.put("code", code);
             jsonObject.put("function_code", functionCode);
         } catch (JSONException e) {
